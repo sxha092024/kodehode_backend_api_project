@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rest API example</title>
+    <link rel="shortcut icon" href="./assets/img/favicon.svg" type="image/svg+xml">
+    <link rel="shortcut icon" href="./assets/img/favicon.png" type="image/png">
+    <link rel="stylesheet" href="assets/css/base.css">
+    <script defer="true" src="assets/js/index.js"></script>
+  </head>
+  <body>
+    <header>
+      <h1>index.html</h1>
+      <ul>
+        <li><a href="/status.html">Status (healthcheck)</a></li>
+        <li><a href="/swagger">API (Swagger UI)</a></li>
+      </ul>
+    </header>
+    <iframe name="hiddenFrame" width="0" height="0" frameborder="0" style="display: none;" id="hiddenFrame"></iframe>
+    <!-- for some reason this appears to be required for form submission to not redirect -->
+    <main>
+      <div>
+        <h2>UPLOAD</h2>
+        <form action="/api/v1/upload" method="post" enctype="multipart/form-data" target="hiddenFrame">
+          <input type="file" name="file" id="file-picker">
+          <input type="submit" value="upload">
+        </form>
+      </div>
+      <div>
+        <h2>RETRIEVE FORM</h2>
+        <form action="/api/v1/get" method="get" target="hiddenFrame">
+          <input type="text" name="guid" id="guid-form-entry-text">
+          <input type="submit" value="get">
+        </form>
+      </div>
+    </main>
+  </body>
+  <script>
+    fetch("/api/v1/healthcheck").then((healthcheck) => {
+        console.log(healthcheck);
+        healthcheck.json().then((message) => {
+            console.log(message);
+            if (message.isDev) {
+                console.log("Dev environment, reloading page every minute...");
+                setTimeout(() => {
+                    console.log("Reloading...");
+                    // window.location.reload();
+                }, 1_000 * 60);
+            } else {
+                console.log("Not a dev environment");
+            }
+        });
+    });
+  </script>
+</html>

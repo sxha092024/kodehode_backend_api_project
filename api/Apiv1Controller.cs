@@ -15,22 +15,49 @@ public class Apiv1Controller : ControllerBase
     private readonly ILogger _logger;
 
     [HttpGet("get")]
-    public IActionResult Get([FromQuery(Name = "guid")]string requestedGuid)
+    public IActionResult GetQueryParam([FromQuery(Name = "guid")] string requestedGuid)
     {
         _logger.LogDebug("{Request}", Request);
-        var connection = _dapper.CreateConnection();
-        var command = "SELECT * FROM UploadTable WHERE Guid like @Guid";
         try
         {
-            var result = connection.QuerySingle<UploadAsset>(command, new { Guid = requestedGuid });
+            var result = GetUploadAsset(new Guid(requestedGuid));
             _logger.LogDebug("Result from query: {@result}", result);
-            // var response = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
-            // response.Content = new StreamContent(new MemoryStream(result.Data));
-            // response.Headers.Add("filename", result.Name);
-            // response.Headers.Add("guid", result.Guid.ToString());
-            // response.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(result.ContentType);
-            // return response;
             return File(new MemoryStream(result.Data), result.ContentType, result.Name);
+        }
+        catch (Exception exc)
+        {
+            _logger.LogError("{@exc}", exc);
+            throw;
+        }
+    }
+
+    [HttpGet("get/{requestedGuid}")]
+    public IActionResult GetURIPathResource(string requestedGuid)
+    {
+        _logger.LogDebug("{Request}", Request);
+        try
+        {
+            var result = GetUploadAsset(new Guid(requestedGuid));
+            _logger.LogDebug("Result from query: {@result}", result);
+            return File(new MemoryStream(result.Data), result.ContentType, result.Name);
+        }
+        catch (Exception exc)
+        {
+            _logger.LogError("{@exc}", exc);
+            throw;
+        }
+    }
+
+    private UploadAsset GetUploadAsset(Guid guid)
+    {
+        try
+        {
+            using (var connection = _dapper.CreateConnection())
+            {
+                var command = "SELECT * FROM UploadTable WHERE Guid like @Guid";
+                var result = connection.QuerySingle(command, new { Guid = guid });
+                return result;
+            }
         }
         catch (Exception exc)
         {
